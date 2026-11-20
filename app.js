@@ -17,11 +17,13 @@ let apelidos = store.get(LS_APELIDOS, {});
 const opts = Object.assign({ stamp: true, variacao: true, order: 'orig', logo: true }, store.get(LS_OPTS, {}));
 let state = null; // { prefix, labels: [...] }
 let logoImg = null;
+const LOGO_PADRAO = 'logo-padrao.png'; // logo da Sintonia Ateliê (perfil da loja na Shopee)
 function loadLogo() {
-  const src = store.get(LS_LOGO, null);
+  const proprio = store.get(LS_LOGO, null);
+  const src = proprio || LOGO_PADRAO;
   logoImg = null;
-  $('#logoPrev').hidden = $('#logoDel').hidden = !src;
-  if (!src) return Promise.resolve();
+  $('#logoPrev').hidden = false;
+  $('#logoDel').hidden = !proprio;
   $('#logoPrev').src = src;
   return new Promise(res => { const im = new Image(); im.onload = () => { logoImg = im; res(); }; im.onerror = () => res(); im.src = src; });
 }
