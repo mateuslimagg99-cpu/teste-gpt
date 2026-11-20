@@ -6,7 +6,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 
 const FONT = 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif';
 const DPI = 203; // resolução da térmica: 1 ponto da etiqueta = 1 ponto impresso
-const LS_APELIDOS = 'etq.apelidos.v1', LS_OPTS = 'etq.opts.v1';
+const LS_APELIDOS = 'etq.apelidos.v1', LS_OPTS = 'etq.opts.v1', LS_LOGO = 'etq.logo.v1';
 
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
@@ -14,8 +14,18 @@ const store = {
 };
 
 let apelidos = store.get(LS_APELIDOS, {});
-const opts = Object.assign({ stamp: true, variacao: true, order: 'orig' }, store.get(LS_OPTS, {}));
+const opts = Object.assign({ stamp: true, variacao: true, order: 'orig', logo: true }, store.get(LS_OPTS, {}));
 let state = null; // { prefix, labels: [...] }
+let logoImg = null;
+function loadLogo() {
+  const src = store.get(LS_LOGO, null);
+  logoImg = null;
+  $('#logoPrev').hidden = $('#logoDel').hidden = !src;
+  if (!src) return Promise.resolve();
+  $('#logoPrev').src = src;
+  return new Promise(res => { const im = new Image(); im.onload = () => { logoImg = im; res(); }; im.onerror = () => res(); im.src = src; });
+}
+const logoReady = loadLogo();
 
 // ---------------- entrada de arquivos ----------------
 const drop = $('#drop'), fileInput = $('#file');
@@ -94,6 +104,7 @@ async function handleFiles(files) {
       return;
     }
     setStatus(`Lendo ${units.length} etiqueta(s)…`);
+    await logoReady;
     await buildState(prefix, units, mergeDaces(daces), blocks);
     setStatus('');
   } catch (e) {
@@ -160,6 +171,39 @@ function findBlankBand(u) {
   return best && best.h >= 36 ? best : null;
 }
 
+// área em branco à direita do nome do remetente (antes do QR)
+function findLogoBox(u) {
+  const x0 = Math.round(u.width * 0.235), x1 = Math.round(u.width * 0.615);
+  const ya = Math.round(u.height * 0.64), yb = Math.round(u.height * 0.80);
+  const black = (x, y) => (u.bits[y * u.bpr + (x >> 3)] >> (7 - (x & 7))) & 1;
+  const blankRow = y => { for (let x = x0; x < x1; x++) if (black(x, y)) return false; return true; };
+  let best = null, start = -1;
+  for (let y = ya; y <= yb; y++) {
+    const b = y < yb && blankRow(y);
+    if (b && start < 0) start = y;
+    if (!b && start >= 0) { if (!best || y - start > best.h) best = { y: start, h: y - start }; start = -1; }
+  }
+  if (!best || best.h < 40) return null;
+  return { x: x0 + 6, y: best.y + 4, w: x1 - x0 - 12, h: best.h - 8 };
+}
+
+function drawLogo(canvas, box) {
+  const r = Math.min(box.w / logoImg.width, box.h / logoImg.height);
+  const w = Math.max(1, Math.round(logoImg.width * r)), h = Math.max(1, Math.round(logoImg.height * r));
+  const t = document.createElement('canvas'); t.width = w; t.height = h;
+  const tc = t.getContext('2d');
+  tc.fillStyle = '#fff'; tc.fillRect(0, 0, w, h);
+  tc.imageSmoothingQuality = 'high';
+  tc.drawImage(logoImg, 0, 0, w, h);
+  const img = tc.getImageData(0, 0, w, h), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11 < 160 ? 0 : 255;
+    d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+  }
+  tc.putImageData(img, 0, 0);
+  canvas.getContext('2d').drawImage(t, box.x, box.y + Math.round((box.h - h) / 2));
+}
+
 function wrap(ctx, text, maxW) {
   const words = text.split(/\s+/); const lines = []; let line = '';
   for (const w of words) {
@@ -217,7 +261,7 @@ async function buildState(prefix, units, daces, blocks) {
     let dace = chave ? daceByKey.get(chave) : null;
     let viaOrdem = false;
     if (!dace && !chave && daces.length === units.length) { dace = daces[i]; viaOrdem = true; }
-    return { orig: i, unit: u, base, chave, tracking, dace, viaOrdem, band: findBlankBand(u) };
+    return { orig: i, unit: u, base, chave, tracking, dace, viaOrdem, band: findBlankBand(u), logoBox: findLogoBox(u) };
   });
   const matches = matchPacking(labels.map(l => l.dace ? l.dace.itens : null), blocks);
   labels.forEach((l, i) => {
@@ -265,6 +309,8 @@ function renderLabelImages() {
     const txt = labelText(l);
     l.stamped = !!(opts.stamp && txt && l.band);
     if (l.stamped) { stampText(c, l.band, txt); toPureBW(c, l.band.y, l.band.h); }
+    l.logo = !!(opts.logo && logoImg && l.logoBox);
+    if (l.logo) drawLogo(c, l.logoBox);
     l.canvas = c;
     l.url = c.toDataURL('image/png');
   }
@@ -284,6 +330,7 @@ function pickRows(ls) {
 function render() {
   $('#drop').classList.add('compact');
   $('#result').hidden = false;
+  $('#optLogo').checked = opts.logo;
   $('#optStamp').checked = opts.stamp; $('#optVar').checked = opts.variacao; $('#optOrder').value = opts.order;
   renderLabelImages();
   const ls = orderedLabels();
@@ -367,7 +414,7 @@ $('#btnZpl').addEventListener('click', async () => {
   try {
     const parts = [state.prefix];
     for (const l of orderedLabels()) {
-      const bits = l.stamped ? canvasToBits(l.canvas, l.unit.bpr) : l.unit.bits;
+      const bits = (l.stamped || l.logo) ? canvasToBits(l.canvas, l.unit.bpr) : l.unit.bits;
       parts.push(await encodeUnit(l.unit, bits));
     }
     const blob = new Blob([parts.join('')], { type: 'text/plain' });
@@ -380,6 +427,25 @@ $('#btnZpl').addEventListener('click', async () => {
   btn.disabled = false;
 });
 
+$('#optLogo').addEventListener('change', e => { opts.logo = e.target.checked; store.set(LS_OPTS, opts); if (state) render(); });
+$('#logoFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const im = new Image();
+  im.src = URL.createObjectURL(f);
+  await im.decode().catch(() => null);
+  if (!im.width) { setStatus('Não consegui abrir essa imagem.', 'err'); return; }
+  const r = Math.min(1, 600 / Math.max(im.width, im.height)); // guarda reduzido
+  const c = document.createElement('canvas');
+  c.width = Math.round(im.width * r); c.height = Math.round(im.height * r);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(im, 0, 0, c.width, c.height);
+  store.set(LS_LOGO, c.toDataURL('image/png'));
+  opts.logo = true; store.set(LS_OPTS, opts);
+  await loadLogo();
+  if (state) render();
+});
+$('#logoDel').addEventListener('click', async () => { localStorage.removeItem(LS_LOGO); await loadLogo(); if (state) render(); });
 $('#optStamp').addEventListener('change', e => { opts.stamp = e.target.checked; store.set(LS_OPTS, opts); render(); });
 $('#optVar').addEventListener('change', e => { opts.variacao = e.target.checked; store.set(LS_OPTS, opts); render(); });
 $('#optOrder').addEventListener('change', e => { opts.order = e.target.value; store.set(LS_OPTS, opts); render(); });
