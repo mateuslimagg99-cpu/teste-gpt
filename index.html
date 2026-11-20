@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etiquetas Shopee com produto</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<link rel="stylesheet" href="style.css">
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/jsQR.js"></script>
+</head>
+<body>
+<header class="topo no-print">
+  <div class="wrap">
+    <h1>📦 Etiquetas Shopee com produto</h1>
+    <p class="sub">Solte o <b>.zip</b> que a Shopee baixa (etiqueta ZPL + declaração de conteúdo + lista de empacotamento). Cada etiqueta sai com o nome do produto escrito na faixa em branco, pronta para imprimir.</p>
+  </div>
+</header>
+
+<main class="wrap no-print" id="app">
+  <section id="drop" class="drop" tabindex="0">
+    <input type="file" id="file" multiple accept=".zip,.txt,.zpl,.pdf">
+    <div class="drop-inner">
+      <div class="drop-icon">⬇</div>
+      <div><b>Arraste o .zip aqui</b> ou clique para escolher</div>
+      <div class="hint">Também aceita os arquivos soltos (.txt/.zpl e os PDFs). Nada é enviado para internet: tudo roda no seu navegador.</div>
+    </div>
+  </section>
+
+  <div id="status" class="status" hidden></div>
+
+  <section id="result" hidden>
+    <div class="toolbar">
+      <button id="btnPrint" class="btn primary">🖨 Imprimir etiquetas (10×15)</button>
+      <button id="btnZpl" class="btn">⬇ Baixar ZPL com produto</button>
+      <button id="btnPick" class="btn">📋 Imprimir lista de separação</button>
+      <button id="btnReset" class="btn ghost">↺ Outro arquivo</button>
+    </div>
+
+    <div class="opts">
+      <label><input type="checkbox" id="optStamp" checked> Escrever produto na etiqueta</label>
+      <label><input type="checkbox" id="optVar" checked> Incluir variação</label>
+      <label>Ordem:
+        <select id="optOrder">
+          <option value="orig">original da Shopee</option>
+          <option value="prod">agrupar por produto</option>
+        </select>
+      </label>
+    </div>
+
+    <h2>Separação</h2>
+    <p class="hint">Dê um <b>apelido</b> curto a cada produto: ele vai na etiqueta no lugar do título enorme do anúncio e fica salvo neste navegador para os próximos envios.</p>
+    <div class="tablewrap"><table id="pickTable" class="tbl"></table></div>
+
+    <h2>Etiquetas <span id="countLbl" class="pill"></span></h2>
+    <div id="cards" class="cards"></div>
+  </section>
+
+  <footer class="rodape">
+    Funciona com o zip "Etiqueta de Envio ZPL + Declaração de Conteúdo + Lista de Empacotamento" da Shopee.
+    O texto é escrito só na faixa em branco entre o código da rota e o código de barras, sem cobrir nenhum código.
+  </footer>
+</main>
+
+<!-- área usada só na impressão -->
+<div id="printLabels" class="print-only"></div>
+<div id="printPick" class="print-only"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

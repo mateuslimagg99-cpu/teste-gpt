@@ -1,0 +1,77 @@
+:root{
+  --bg:#f6f5f2; --card:#fff; --ink:#1d1d1f; --mute:#6b6b70; --line:#e3e1dc;
+  --brand:#ee4d2d; --brand-ink:#fff; --ok:#1f8a4c; --warn:#b26a00; --bad:#c62828;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+.topo{background:var(--brand);color:var(--brand-ink);padding:22px 0 18px;margin-bottom:20px}
+.topo h1{margin:0 0 6px;font-size:24px}
+.topo .sub{margin:0;opacity:.95;max-width:760px}
+h2{font-size:18px;margin:28px 0 8px;display:flex;align-items:center;gap:8px}
+.hint{color:var(--mute);font-size:13px;margin:4px 0 10px}
+.pill{background:var(--ink);color:#fff;border-radius:99px;padding:1px 10px;font-size:13px}
+
+.drop{position:relative;border:2px dashed #c9c5bd;border-radius:var(--radius);background:var(--card);padding:34px 16px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--brand);background:#fff6f3}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop-icon{font-size:30px;color:var(--brand);margin-bottom:4px}
+.drop.compact{padding:12px}
+.drop.compact .drop-icon,.drop.compact .hint{display:none}
+
+.status{margin:14px 0;padding:10px 14px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.status.err{border-color:#f0b4b4;background:#fff3f3;color:var(--bad)}
+.status.warn{border-color:#f1d29a;background:#fffaf0;color:var(--warn)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 10px}
+.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:#bbb}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.ghost{background:transparent}
+.opts{display:flex;flex-wrap:wrap;gap:18px;align-items:center;font-size:14px;color:#333}
+.opts select{font:inherit;padding:4px 6px;border-radius:8px;border:1px solid var(--line)}
+
+.tablewrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);background:#fbfaf8}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .qtd{font-size:20px;font-weight:800;text-align:center;width:60px}
+.tbl .full{color:var(--mute);font-size:12px;margin-top:3px}
+.tbl input{font:inherit;width:100%;min-width:180px;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.tbl input:focus{outline:2px solid #ffd2c6;border-color:var(--brand)}
+.nums{color:var(--mute);font-size:13px;white-space:nowrap}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;display:block;border-bottom:1px solid var(--line);image-rendering:auto;background:#fff}
+.card .info{padding:10px 12px;font-size:13px}
+.card .num{font-weight:800;font-size:12px;color:var(--brand)}
+.card .prod{font-weight:700;font-size:14px;margin:2px 0 4px}
+.card .meta{color:var(--mute)}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;margin-top:4px}
+.tag.ok{background:#e6f4ec;color:var(--ok)}
+.tag.warn{background:#fff1d6;color:var(--warn)}
+.tag.bad{background:#fde7e7;color:var(--bad)}
+
+.rodape{color:var(--mute);font-size:12px;margin:40px 0 30px;border-top:1px solid var(--line);padding-top:12px}
+
+.print-only{display:none}
+
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  body.p-labels #printLabels{display:block}
+  body.p-pick #printPick{display:block}
+  .lbl-page{width:100mm;height:150mm;page-break-after:always;break-after:page;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .lbl-page:last-child{page-break-after:auto;break-after:auto}
+  .lbl-page img{width:100mm;height:150mm;object-fit:contain;image-rendering:pixelated}
+  #printPick{font:12pt Arial,sans-serif;color:#000}
+  #printPick h1{font-size:16pt;margin:0 0 4mm}
+  #printPick table{width:100%;border-collapse:collapse}
+  #printPick th,#printPick td{border:1px solid #000;padding:2mm 3mm;text-align:left;vertical-align:top}
+  #printPick .box{width:8mm}
+  #printPick .q{text-align:center;font-weight:bold;font-size:14pt}
+}
