@@ -5,6 +5,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const FONT = 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif';
+const DPI = 203; // resolução da térmica: 1 ponto da etiqueta = 1 ponto impresso
 const LS_APELIDOS = 'etq.apelidos.v1', LS_OPTS = 'etq.opts.v1';
 
 const store = {
@@ -194,6 +195,17 @@ function stampText(canvas, band, text) {
   lines.forEach((l, i) => ctx.fillText(l, canvas.width / 2, top + i * lh));
 }
 
+// deixa só preto e branco (sem cinza do antialias), como a térmica imprime
+function toPureBW(c, y, h) {
+  const ctx = c.getContext('2d');
+  const img = ctx.getImageData(0, y, c.width, h), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11 < 150 ? 0 : 255;
+    d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, y);
+}
+
 async function buildState(prefix, units, daces, blocks) {
   const daceByKey = new Map(daces.map(d => [d.chave, d]));
   const labels = units.map((u, i) => {
@@ -252,7 +264,7 @@ function renderLabelImages() {
     c.getContext('2d').drawImage(l.base, 0, 0);
     const txt = labelText(l);
     l.stamped = !!(opts.stamp && txt && l.band);
-    if (l.stamped) stampText(c, l.band, txt);
+    if (l.stamped) { stampText(c, l.band, txt); toPureBW(c, l.band.y, l.band.h); }
     l.canvas = c;
     l.url = c.toDataURL('image/png');
   }
@@ -324,7 +336,7 @@ function render() {
   }).join('');
 
   // área de impressão
-  $('#printLabels').innerHTML = ls.map(l => `<div class="lbl-page"><img src="${l.url}"></div>`).join('');
+  $('#printLabels').innerHTML = ls.map(l => `<div class="lbl-page"><img src="${l.url}" style="width:${(l.canvas.width / DPI).toFixed(4)}in;height:${(l.canvas.height / DPI).toFixed(4)}in"></div>`).join('');
   const hoje = new Date().toLocaleDateString('pt-BR');
   $('#printPick').innerHTML = `<h1>Separação · ${hoje} · ${ls.length} pacote(s), ${total} item(ns)</h1>
     <table><thead><tr><th class="box"></th><th>Qtd</th><th>Produto</th><th>Variação</th><th>Etiquetas</th></tr></thead><tbody>` +

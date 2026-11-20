@@ -67,7 +67,7 @@ h2{font-size:18px;margin:28px 0 8px;display:flex;align-items:center;gap:8px}
   body.p-pick #printPick{display:block}
   .lbl-page{width:100mm;height:150mm;page-break-after:always;break-after:page;display:flex;align-items:center;justify-content:center;overflow:hidden}
   .lbl-page:last-child{page-break-after:auto;break-after:auto}
-  .lbl-page img{width:100mm;height:150mm;object-fit:contain;image-rendering:pixelated}
+  .lbl-page img{flex:none;max-width:none;max-height:none;image-rendering:pixelated}
   #printPick{font:12pt Arial,sans-serif;color:#000}
   #printPick h1{font-size:16pt;margin:0 0 4mm}
   #printPick table{width:100%;border-collapse:collapse}
